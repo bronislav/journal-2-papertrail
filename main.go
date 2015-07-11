@@ -4,35 +4,31 @@ import (
 	"log"
 	"os"
 
-	"github.com/kelseyhightower/journal-2-logentries/journal"
-	"github.com/kelseyhightower/journal-2-logentries/logentries"
+	"github.com/bronislav/journal-2-papertrail/journal"
+	"github.com/bronislav/journal-2-papertrail/papertrail"
 )
 
 func main() {
-	socket := os.Getenv("LOGENTRIES_JOURNAL_SOCKET")
+	socket := os.Getenv("JOURNAL_SOCKET")
 	if socket == "" {
 		socket = journal.DefaultSocket
 	}
-	url := os.Getenv("LOGENTRIES_URL")
+	url := os.Getenv("PAPERTRAIL_URL")
 	if url == "" {
-		url = logentries.DefaultUrl
-	}
-	token := os.Getenv("LOGENTRIES_TOKEN")
-	if token == "" {
-		log.Fatal("non-empty input token (LOGENTRIES_TOKEN) is required. See https://logentries.com/doc/input-token")
+		log.Fatal("non-empty papertrail url (PAPERTRAIL_URL) is required. See http://help.papertrailapp.com")
 	}
 	logs, err := journal.Follow(socket)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	le, err := logentries.New(url, token)
+	logger, err := papertrail.New(url)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	for {
 		select {
 		case data := <-logs:
-			if _, err := le.Write(data); err != nil {
+			if _, err := logger.Write(data); err != nil {
 				log.Print(err.Error())
 			}
 		}
